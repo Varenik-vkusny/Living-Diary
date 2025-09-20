@@ -34,14 +34,14 @@ target_metadata = Base.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
-database_url = settings.direct_url
+direct_url = settings.direct_url
 
 # print("Running in local mode. Replacing DB host for Alembic.")
-# database_url = database_url.replace(
+# direct_url = direct_url.replace(
 #     "aws-1-eu-north-1.pooler.supabase.com:5432", "localhost:5432"
 # )
 
-config.set_main_option("sqlalchemy.url", database_url)
+config.set_main_option("sqlalchemy.url", direct_url)
 
 
 def run_migrations_offline() -> None:

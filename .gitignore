@@ -38,3 +38,6 @@ __pycache__/
 .coverage
 htmlcov/
 .tox/
+
+# Игнорировать json для авторизации
+firebase-credentials.json
