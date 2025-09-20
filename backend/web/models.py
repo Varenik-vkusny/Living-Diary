@@ -1,4 +1,4 @@
-from sqlalchemy import String, Integer, Column
+from sqlalchemy import String, Integer, Column, Boolean
 from .database import Base
 
 
@@ -9,3 +9,4 @@ class User(Base):
     firebase_uid = Column(String, unique=True, index=True, nullable=False)
     username = Column(String)
     email = Column(String, unique=True)
+    profile_completed = Column(Boolean, default=False)
