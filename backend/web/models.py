@@ -13,7 +13,7 @@ class User(Base):
     email = Column(String, unique=True)
     profile_completed = Column(Boolean, default=False)
 
-    notes = relationship('Note', back_populates='owner')
+    notes = relationship("Note", back_populates="owner")
 
 
 class Note(Base):
@@ -24,6 +24,7 @@ class Note(Base):
     content = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.now())
 
-    owner_id = Column(Integer, ForeignKey('users.id'))
+    owner_id = Column(Integer, ForeignKey("users.id"))
+    owner_firebase_uid = Column(String, nullable=False, index=True)
 
-    owner = relationship('User', back_populates='notes')
+    owner = relationship("User", back_populates="notes")

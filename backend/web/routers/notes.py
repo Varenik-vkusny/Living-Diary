@@ -9,14 +9,18 @@ from ..dependencies import get_current_user, get_db
 router = APIRouter()
 
 
-@router.post("/notes", response_model=schemas.NoteOut, status_code=status.HTTP_200_OK)
+@router.post("/", response_model=schemas.NoteOut, status_code=status.HTTP_200_OK)
 async def create_note(
     note: schemas.NoteIn,
     current_user: models.User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
 
-    new_note = models.Note(**note.model_dump(), owner_id=current_user.id)
+    new_note = models.Note(
+        **note.model_dump(),
+        owner_id=current_user.id,
+        owner_firebase_uid=current_user.firebase_uid
+    )
 
     db.add(new_note)
     await db.commit()
@@ -25,9 +29,7 @@ async def create_note(
     return new_note
 
 
-@router.get(
-    "/notes", response_model=list[schemas.NoteOut], status_code=status.HTTP_200_OK
-)
+@router.get("/", response_model=list[schemas.NoteOut], status_code=status.HTTP_200_OK)
 async def get_notes(
     current_user: models.User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -52,7 +54,7 @@ async def get_notes(
 
 
 @router.patch(
-    "/notes/{note_id}", response_model=schemas.NoteOut, status_code=status.HTTP_200_OK
+    "/{note_id}", response_model=schemas.NoteOut, status_code=status.HTTP_200_OK
 )
 async def patch_note(
     note_id: int,
@@ -88,7 +90,7 @@ async def patch_note(
     return note_db
 
 
-@router.delete("/notes/{note_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{note_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_note(
     note_id: int,
     current_user: models.User = Depends(get_current_user),
