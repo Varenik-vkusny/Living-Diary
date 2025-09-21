@@ -1,9 +1,6 @@
 from pydantic import BaseModel, ConfigDict, EmailStr
-
-
-class UserIn(BaseModel):
-    username: str
-    email: str
+from datetime import datetime
+from typing import Optional
 
 
 class UserOut(BaseModel):
@@ -12,3 +9,26 @@ class UserOut(BaseModel):
     email: EmailStr
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class UserUpdate(BaseModel):
+    username: Optional[str] = None
+    email: Optional[EmailStr] = None
+
+
+class NoteIn(BaseModel):
+    title: str
+    content: str
+
+
+class NoteOut(NoteIn):
+    id: int
+    created_at: datetime
+    owner: UserOut
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class NoteUpdate(BaseModel):
+    title: Optional[str] = None
+    content: Optional[str] = None
