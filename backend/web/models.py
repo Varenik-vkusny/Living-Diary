@@ -23,6 +23,7 @@ class Note(Base):
     title = Column(String)
     content = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.now())
+    comment = Column(String)
 
     owner_id = Column(Integer, ForeignKey("users.id"))
     owner_firebase_uid = Column(String, nullable=False, index=True)

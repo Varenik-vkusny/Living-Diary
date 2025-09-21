@@ -25,6 +25,7 @@ class NoteOut(NoteIn):
     id: int
     created_at: datetime
     owner: UserOut
+    comment: str
 
     model_config = ConfigDict(from_attributes=True)
 

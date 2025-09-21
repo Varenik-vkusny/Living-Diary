@@ -14,6 +14,8 @@ class Settings(BaseSettings):
 
     db_direct_port: int
 
+    openai_api_key: str
+
     @computed_field
     @property
     def database_url(self) -> str:

@@ -1,17 +1,33 @@
 from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi.background import BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from .. import models, schemas
 from ..dependencies import get_current_user, get_db
+from ..ai_service import get_ai_comment
 
 
 router = APIRouter()
 
 
+async def generate_and_save_ai_comment(note_id: int, db: AsyncSession) -> str:
+
+    note = await db.get(models.Note, note_id)
+
+    if not note:
+        return
+
+    comment = await get_ai_comment(note.content)
+
+    note.comment = comment
+    await db.commit()
+
+
 @router.post("/", response_model=schemas.NoteOut, status_code=status.HTTP_200_OK)
 async def create_note(
     note: schemas.NoteIn,
+    background_tasks: BackgroundTasks,
     current_user: models.User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -25,6 +41,8 @@ async def create_note(
     db.add(new_note)
     await db.commit()
     await db.refresh(new_note)
+
+    background_tasks.add_task(generate_and_save_ai_comment, new_note.id, db)
 
     return new_note
 
