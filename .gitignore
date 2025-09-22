@@ -1,43 +1,71 @@
-# Игнорировать все .env файлы, содержащие секреты
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ & VSCode related
+*.iml
+*.ipr
+*.iws
+.idea/
+.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+
+# Symbolication & Obfuscation related
+app.*.symbols
+app.*.map.json
+
+# Android Studio build artifacts
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Secrets
 .env
 .env.*
-
-# Игнорировать secrets.yaml
-
 k8s/secrets.yaml
+firebase-credentials.json
 
-# Не игнорировать файлы-примеры
+# Don't ignore example files
 !*.env.example
 !*.env.*.example
 
-# Игнорировать secrets.yaml
-k8s/secrets.yaml
-
-# Папка виртуального окружения
+# Virtual environments
 venv/
 /venv/
 .venv/
 */.venv/
 
-# --- Файлы базы данных ---
+# Database files
 fastapi.db
 *.db
 *.sqlite3
 
-# --- Python кэш и артефакты ---
+# Python cache and artifacts
 __pycache__/
 *.py[cod]
 *$py.class
 
-# --- Инструменты разработки и IDE ---
-.vscode/
-.idea/
-
-# --- Инструменты тестирования ---
+# Testing tools
 .pytest_cache/
 .coverage
 htmlcov/
 .tox/
-
-# Игнорировать json для авторизации
-firebase-credentials.json

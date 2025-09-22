@@ -1,0 +1,36 @@
+name: living_diary
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  get_it: ^7.7.0
+  # --- ДОБАВЛЕННЫЕ И НЕДОСТАЮЩИЕ ПАКЕТЫ ---
+  firebase_core: ^2.32.0         # Ядро для работы Firebase
+  firebase_auth: ^4.19.0         # Для аутентификации
+  google_sign_in: ^6.2.1         # Для входа через Google
+  http: ^1.2.1                   # Для отправки запросов на API
+  # ----------------------------------------
+
+  # Твои существующие пакеты
+  google_fonts: ^6.2.1
+  flutter_svg: ^2.0.10+1
+  flutter_secure_storage: ^9.0.0
+  cupertino_icons: ^1.0.8
+  flutter_bloc: ^8.1.5 # <--- Добавил на будущее для Cubit
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icons/

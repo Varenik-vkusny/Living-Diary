@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "364333285257",
+    "project_id": "living-diary-32de8",
+    "storage_bucket": "living-diary-32de8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:364333285257:android:33c9da157cb0c05221eb58",
+        "android_client_info": {
+          "package_name": "com.volkswagen.living_diary"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "364333285257-8ou7vijep0qm10809pntc7thpjl7j19o.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.volkswagen.living_diary",
+            "certificate_hash": "e5c087252aa8e2e0a528917cf55a6e432f84a4a4"
+          }
+        },
+        {
+          "client_id": "364333285257-lbe5gfp7jpt10jennlo6o6pb2rvgu3n0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDyaai0rL3xyEQTF2jlSZCHr0pLPoAid0M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "364333285257-lbe5gfp7jpt10jennlo6o6pb2rvgu3n0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
