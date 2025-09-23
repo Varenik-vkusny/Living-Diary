@@ -6,22 +6,26 @@ from sqlalchemy.orm import selectinload
 from .. import models, schemas
 from ..dependencies import get_current_user, get_db
 from ..ai_service import get_ai_comment
+from ..database import AsyncLocalSession
 
 
 router = APIRouter()
 
 
-async def generate_and_save_ai_comment(note_id: int, db: AsyncSession) -> str:
+async def generate_and_save_ai_comment(note_id: int) -> str:
 
-    note = await db.get(models.Note, note_id)
+    async with AsyncLocalSession() as db:
+        try:
+            note = await db.get(models.Note, note_id)
+            if not note:
+                return
 
-    if not note:
-        return
+            comment = await get_ai_comment(note.content)
 
-    comment = await get_ai_comment(note.content)
-
-    note.comment = comment
-    await db.commit()
+            note.comment = comment
+            await db.commit()
+        except Exception as e:
+            print(f"ОШИБКА В ФОНОВОЙ ЗАДАЧЕ: {e}")
 
 
 @router.post("/", response_model=schemas.NoteOut, status_code=status.HTTP_200_OK)
@@ -35,14 +39,14 @@ async def create_note(
     new_note = models.Note(
         **note.model_dump(),
         owner_id=current_user.id,
-        owner_firebase_uid=current_user.firebase_uid
+        owner_firebase_uid=current_user.firebase_uid,
     )
 
     db.add(new_note)
     await db.commit()
     await db.refresh(new_note)
 
-    background_tasks.add_task(generate_and_save_ai_comment, new_note.id, db)
+    background_tasks.add_task(generate_and_save_ai_comment, new_note.id)
 
     return new_note
 
@@ -131,7 +135,7 @@ async def delete_note(
             detail="Эта запись вам не принадлежит! Вы не можете ее удалить!",
         )
 
-    await db.delete()
+    await db.delete(note_db)
     await db.commit()
 
     return
