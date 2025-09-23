@@ -1,15 +1,15 @@
-import openai
+from openai import AsyncOpenAI
 from .config import get_settings
 
 settings = get_settings()
 
-client = openai.OpenAI(api_key=settings.openai_api_key)
+client = AsyncOpenAI(api_key=settings.openai_api_key)
 
 
 async def get_ai_comment(note_content: str) -> str:
 
     try:
-        response = client.chat.completions.create(
+        response = await client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {

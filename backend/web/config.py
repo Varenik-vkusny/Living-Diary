@@ -32,9 +32,17 @@ class Settings(BaseSettings):
             f"@{self.db_host}:{self.db_direct_port}/{self.db_name}"
         )
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=".env.docker", extra="ignore")
 
 
 @lru_cache
 def get_settings():
-    return Settings()
+    settings = Settings()
+    # --- ОТЛАДОЧНЫЙ БЛОК ---
+    print("--- DEBUG SETTINGS ---")
+    print(f"Loaded DB_HOST from settings: {settings.db_host}")
+    print(f"Loaded DB_PORT from settings: {settings.db_port}")
+    print(f"Final DATABASE_URL: {settings.database_url}")
+    print("--------------------")
+    # -------------------------
+    return settings
