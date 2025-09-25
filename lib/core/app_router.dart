@@ -2,22 +2,15 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:living_diary/domain/entities/diary/note_entity.dart';
 import 'package:living_diary/service_locator.dart';
-
-// Импорты экранов
 import 'package:living_diary/presentation/pages/auth/auth_wrapper.dart';
-import 'package:living_diary/presentation/pages/auth/login_screen.dart';
 import 'package:living_diary/presentation/pages/auth/signup_screen.dart';
 import 'package:living_diary/presentation/pages/home/diary_list_screen.dart';
 import 'package:living_diary/presentation/pages/home/new_entry_screen.dart';
 import 'package:living_diary/presentation/pages/home/entry_detail_screen.dart';
 import 'package:living_diary/presentation/pages/auth/forgot_password_screen.dart';
-
-
-// Импорты кубитов
-
-
-import '../presentation/cubit/auth_cubit.dart';
+import '../presentation/cubit/auth/auth_cubit.dart';
 import '../presentation/cubit/diary/diary_cubit.dart';
 
 class AppRouter {
@@ -48,16 +41,23 @@ class AppRouter {
         return CupertinoPageRoute(builder: (_) => const ForgotPasswordScreen());
       case diaryListRoute:
         return CupertinoPageRoute(builder: (_) => const DiaryListScreen());
+
+    // ИЗМЕНЕНИЕ: Экран создания/редактирования
       case newEntryRoute:
-      // ГЛАВНОЕ ИСПРАВЛЕНИЕ: Предоставляем DiaryCubit экрану
+      // Аргумент теперь необязательный. Если его нет, noteToEdit будет null (создание новой)
+        final noteToEdit = settings.arguments as NoteEntity?;
         return CupertinoPageRoute(
-          builder: (_) => BlocProvider.value(
-            value: getIt<DiaryCubit>(),
-            child: const NewEntryScreen(),
-          ),
+          builder: (_) => NewEntryScreen(noteToEdit: noteToEdit),
         );
+
+    // ИЗМЕНЕНИЕ: Экран просмотра деталей
       case entryDetailRoute:
-        return CupertinoPageRoute(builder: (_) => const EntryDetailScreen());
+      // Аргумент обязательный. Мы должны передать заметку для просмотра
+        final note = settings.arguments as NoteEntity;
+        return CupertinoPageRoute(
+          builder: (_) => EntryDetailScreen(note: note),
+        );
+
       default:
         return CupertinoPageRoute(
           builder: (_) => const CupertinoPageScaffold(

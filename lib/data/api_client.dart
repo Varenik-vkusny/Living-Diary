@@ -1,48 +1,67 @@
 // lib/data/api_client.dart
 
-
-
+import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 
-// lib/data/api_client.dart
-
-import 'package:firebase_auth/firebase_auth.dart';
-
-class ApiClient extends http.BaseClient {
+class ApiClient {
   final http.Client _inner;
   final FirebaseAuth _firebaseAuth;
 
-  // 1. УКАЗЫВАЕМ ТОЛЬКО БАЗОВЫЙ URL, БЕЗ ЭНДПОИНТОВ
-  final String _baseUrl = 'https://07483d6cb060.ngrok-free.app';
+  // 1. Убедитесь, что здесь НЕТ слэша в конце
+  final String _baseUrl = 'https://b795eb75e4aa.ngrok-free.app';
 
   ApiClient(this._inner, this._firebaseAuth);
 
-  @override
-  Future<http.StreamedResponse> send(http.BaseRequest request) async {
-    try {
-      final user = _firebaseAuth.currentUser;
-      if (user == null) throw Exception('Пользователь не авторизован');
+  Uri _buildUri(String path) {
 
-      final token = await user.getIdToken(true);
-      request.headers['Authorization'] = 'Bearer $token';
+    final cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    return Uri.parse('$_baseUrl/$cleanPath');
+  }
 
-      // 2. НАДЕЖНАЯ СБОРКА URL
-      final url = Uri.parse('$_baseUrl${request.url}');
+  Future<Map<String, String>> _getHeaders() async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) throw Exception('Пользователь не авторизован в Firebase');
+    final token = await user.getIdToken();
 
-      final newRequest = http.Request(request.method, url)
-        ..headers.addAll(request.headers);
+    return {
+      'Content-Type': 'application/json; charset=UTF-8',
+      'Authorization': 'Bearer $token',
+    };
+  }
 
-      if (request is http.Request) {
-        newRequest.bodyBytes = request.bodyBytes;
-      }
+  Future<http.Response> get(String path) async {
+    final url = _buildUri(path);
+    final headers = await _getHeaders();
+    print('--- API CLIENT: GET $url');
+    final response = await _inner.get(url, headers: headers); // <-- Добавим переменную
+    // --- ЛОГИРОВАНИЕ ОТВЕТА ---
+    print('--- API CLIENT: GET Response: ${response.statusCode}');
+    print('--- API CLIENT: GET Response Body: ${response.body}');
+    // -------------------------
+    return response;
+  }
 
-      print('--- API CLIENT: Отправка запроса на: ${newRequest.url}');
-      print('--- API CLIENT: Заголовки: ${newRequest.headers}');
+  Future<http.Response> post(String path, {required Map<String, dynamic> body}) async {
+    final url = _buildUri(path);
+    final headers = await _getHeaders();
+    final encodedBody = jsonEncode(body);
+    print('--- API CLIENT: POST $url, body: $encodedBody');
+    return await _inner.post(url, headers: headers, body: encodedBody);
+  }
 
-      return _inner.send(newRequest);
-    } catch (e) {
-      rethrow;
-    }
+  Future<http.Response> patch(String path, {required Map<String, dynamic> body}) async {
+    final url = _buildUri(path);
+    final headers = await _getHeaders();
+    final encodedBody = jsonEncode(body);
+    print('--- API CLIENT: PATCH $url, body: $encodedBody');
+    return await _inner.patch(url, headers: headers, body: encodedBody);
+  }
+
+  Future<http.Response> delete(String path) async {
+    final url = _buildUri(path);
+    final headers = await _getHeaders();
+    print('--- API CLIENT: DELETE $url');
+    return await _inner.delete(url, headers: headers);
   }
 }

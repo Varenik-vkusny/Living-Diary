@@ -37,6 +37,13 @@
             {
               "client_id": "364333285257-lbe5gfp7jpt10jennlo6o6pb2rvgu3n0.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "364333285257-4c8uk1ln0fvk84u7k7f953rmut4oh8tn.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.volkswagen.livingDiary"
+              }
             }
           ]
         }

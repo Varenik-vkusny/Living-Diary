@@ -1,24 +1,23 @@
-// lib/presentation/pages/home/cubit/diary_state.dart
+// lib/presentation/cubit/diary/diary_state.dart
+import '../../../domain/entities/diary/note_entity.dart';
 
 abstract class DiaryState {}
 
-// Начальное состояние, ничего не происходит
 class DiaryInitial extends DiaryState {}
 
-// Идет процесс загрузки (создание, получение, удаление заметки)
 class DiaryLoading extends DiaryState {}
 
-// Заметка была успешно создана
-class DiaryCreationSuccess extends DiaryState {}
-
-// Произошла какая-либо ошибка
-class DiaryError extends DiaryState {
-  final String message;
-  DiaryError(this.message);
+// Состояние успешной загрузки списка заметок
+class DiaryLoaded extends DiaryState {
+  final List<NoteEntity> notes;
+  DiaryLoaded(this.notes);
 }
 
-// TODO: В будущем можно добавить состояния для успешного получения списка заметок
-// class DiaryLoaded extends DiaryState {
-//   final List<NoteEntity> notes;
-//   DiaryLoaded(this.notes);
-// }
+// Состояние успешного выполнения действия (создание, обновление, удаление)
+class DiarySuccess extends DiaryState {}
+
+// Состояние ошибки
+class DiaryFailure extends DiaryState {
+  final String message;
+  DiaryFailure(this.message);
+}

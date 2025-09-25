@@ -3,8 +3,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:living_diary/core/app_router.dart';
-import '../../cubit/auth_cubit.dart';
-import '../../cubit/auth_state.dart';
+
+import '../../cubit/auth/auth_cubit.dart';
+import '../../cubit/auth/auth_state.dart';
 import '../../widgets/auth/cupertino_primary_button.dart';
 import '../../widgets/auth/cupertino_text_field_widget.dart';
 import '../../widgets/auth/social_login_buttons.dart';
