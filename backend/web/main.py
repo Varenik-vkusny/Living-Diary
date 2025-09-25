@@ -4,12 +4,13 @@ from contextlib import asynccontextmanager
 from firebase_admin import credentials
 from .routers import notes, users
 
-cred = credentials.Certificate("firebase-credentials.json")
-firebase_admin.initialize_app(cred)
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+
+    if not firebase_admin._apps:
+        cred = credentials.Certificate("firebase-credentials.json")
+        firebase_admin.initialize_app(cred)
 
     yield
 
