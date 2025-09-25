@@ -28,7 +28,6 @@ async def get_current_user(
         )
 
     firebase_uid = decoded_token["user_id"]
-    logging.info(f"Токен валиден. Firebase UID: {firebase_uid}")
 
     user_result = await db.execute(
         select(models.User).where(models.User.firebase_uid == firebase_uid)
@@ -37,7 +36,6 @@ async def get_current_user(
     user_db = user_result.scalar_one_or_none()
 
     if not user_db:
-        logging.info(f"Пользователь с UID {firebase_uid} не найден. Создаю нового.")
         new_user = models.User(
             username=decoded_token.get("name", "New User"),
             firebase_uid=firebase_uid,
@@ -47,8 +45,6 @@ async def get_current_user(
         db.add(new_user)
         await db.commit()
         await db.refresh(new_user)
-        logging.info(f"Новый пользователь создан с ID: {new_user.id} в нашей БД.")
 
         return new_user
-    logging.info(f"Найден существующий пользователь с ID: {user_db.id} в нашей БД.")
     return user_db

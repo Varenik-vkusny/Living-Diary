@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, Depends, status, HTTPException
 from fastapi.background import BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,6 +9,7 @@ from ..dependencies import get_current_user, get_db
 from ..ai_service import get_ai_comment
 from ..database import AsyncLocalSession
 
+logging.basicConfig(level=logging.INFO)
 
 router = APIRouter()
 
@@ -16,11 +18,14 @@ async def generate_and_save_ai_comment(note_id: int) -> str:
 
     async with AsyncLocalSession() as db:
         try:
+            logging.info("Начинается генерация")
             note = await db.get(models.Note, note_id)
             if not note:
                 return
 
             comment = await get_ai_comment(note.content)
+
+            logging.info(comment)
 
             note.comment = comment
             await db.commit()
@@ -28,7 +33,7 @@ async def generate_and_save_ai_comment(note_id: int) -> str:
             print(f"ОШИБКА В ФОНОВОЙ ЗАДАЧЕ: {e}")
 
 
-@router.post("/", response_model=schemas.NoteOut, status_code=status.HTTP_200_OK)
+@router.post("/", response_model=schemas.NoteOut, status_code=status.HTTP_201_CREATED)
 async def create_note(
     note: schemas.NoteIn,
     background_tasks: BackgroundTasks,

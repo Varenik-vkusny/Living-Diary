@@ -14,7 +14,7 @@ class Settings(BaseSettings):
 
     db_direct_port: int
 
-    openai_api_key: str
+    gemini_api_key: str
 
     @computed_field
     @property
