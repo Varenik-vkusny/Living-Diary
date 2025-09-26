@@ -23,9 +23,19 @@ class Note(Base):
     title = Column(String)
     content = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.now())
-    comment = Column(String)
 
-    owner_id = Column(Integer, ForeignKey("users.id"))
-    owner_firebase_uid = Column(String, nullable=False, index=True)
+    owner_firebase_uid = Column(
+        String, ForeignKey("users.firebase_uid"), nullable=False, index=True
+    )
 
     owner = relationship("User", back_populates="notes")
+
+
+class AI_context(Base):
+    __tablename__ = "ai_context"
+
+    id = Column(Integer, primary_key=True)
+    owner_firebase_uid = Column(Integer, ForeignKey("users.firebase_uid"))
+    role = Column(String, nullable=False)
+    content = Column(String)
+    created_at = Column(DateTime, default=datetime.now())

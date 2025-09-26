@@ -25,7 +25,6 @@ class NoteOut(NoteIn):
     id: int
     created_at: datetime
     owner: UserOut
-    comment: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -33,3 +32,9 @@ class NoteOut(NoteIn):
 class NoteUpdate(BaseModel):
     title: Optional[str] = None
     content: Optional[str] = None
+
+
+class Message(BaseModel):
+    content: str
+
+    model_config = ConfigDict(from_attributes=True)
