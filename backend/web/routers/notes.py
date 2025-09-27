@@ -5,12 +5,14 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from .. import models, schemas
 from ..dependencies import get_current_user, get_db
-from ..ai_service import get_ai_comment
+from ..ai_service import get_ai_comment, summary_ai_context
 
 
 logging.basicConfig(level=logging.INFO)
 
 router = APIRouter()
+
+CONTEXT_MAX_SYMBOLS = 100000
 
 
 async def generate_and_save_ai_comment(
@@ -27,9 +29,38 @@ async def generate_and_save_ai_comment(
 
         history_db = history_result.scalars().all()
 
+        if sum(len(record.content) for record in history_db) > CONTEXT_MAX_SYMBOLS:
+
+            logging.info("Порог контекста превышен. Запускаю суммаризацию.")
+
+            last_user_record = history_db.pop()
+
+            full_history = "\n".join(
+                [f"{rec.role}: {rec.content}" for rec in history_db]
+            )
+
+            shorted_history = await summary_ai_context(full_history)
+
+            for record in history_db:
+                await db.delete(record)
+
+            summary_context = models.AIContext(
+                user_id=user_id,
+                role="user",
+                content=f"Summary of our past conversations: {shorted_history}",
+            )
+
+            db.add(summary_context)
+            await db.commit()
+
+            history_db = [summary_context, last_user_record]
+
         history = [
             {"role": record.role, "parts": [record.content]} for record in history_db
         ]
+
+        if not history:
+            raise ValueError("История для генерации комментария пуста.")
 
         comment = await get_ai_comment(history)
 

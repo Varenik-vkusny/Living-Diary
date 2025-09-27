@@ -11,6 +11,29 @@ genai.configure(api_key=settings.gemini_api_key)
 model = genai.GenerativeModel("gemini-2.5-flash")
 
 
+async def summary_ai_context(full_history: str) -> str:
+
+    try:
+        response = await model.generate_content_async(
+            f"You are a summarization expert. Your task is to read the following conversation "
+            "between a user and their AI journal assistant and create a concise summary. "
+            "Capture the key events, emotions, recurring themes, and important facts mentioned by the user. "
+            "The summary will be used as a memory for the AI assistant for future conversations. "
+            "Focus on preserving the essence of the user's journey.\n\n"
+            "CONVERSATION HISTORY:\n---\n"
+            f"{full_history}\n---\n"
+            "Now, please provide the summary:"
+        )
+
+        shorted_history = response.text.strip()
+
+        return shorted_history
+
+    except Exception as e:
+        logging.error(f"Ошибка при суммаризации контекста: {e}", exc_info=True)
+        return "Summary of previous events."
+
+
 async def get_ai_comment(history: list[dict]):
     try:
 
