@@ -1,11 +1,11 @@
 import logging
 from fastapi import APIRouter, Depends, status, HTTPException
-from fastapi.background import BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from .. import models, schemas
-from ..dependencies import get_current_user, get_db, generate_and_save_ai_comment
+from ..dependencies import get_current_user, get_db
+from ..ai_service import get_ai_comment
 
 
 logging.basicConfig(level=logging.INFO)
@@ -13,31 +13,71 @@ logging.basicConfig(level=logging.INFO)
 router = APIRouter()
 
 
-@router.post("/", response_model=schemas.Message, status_code=status.HTTP_201_CREATED)
+async def generate_and_save_ai_comment(
+    user_id: int, db: AsyncSession
+) -> models.AIContext:
+
+    try:
+        logging.info("Начинается генерация")
+        history_result = await db.execute(
+            select(models.AIContext)
+            .where(models.AIContext.user_id == user_id)
+            .order_by(models.AIContext.created_at.asc())
+        )
+
+        history_db = history_result.scalars().all()
+
+        history = [
+            {"role": record.role, "parts": [record.content]} for record in history_db
+        ]
+
+        comment = await get_ai_comment(history)
+
+        logging.info(comment)
+
+        ai_comment = models.AIContext(user_id=user_id, content=comment, role="model")
+
+        db.add(ai_comment)
+        await db.commit()
+        await db.refresh(ai_comment)
+
+        return ai_comment
+
+    except Exception as e:
+        print(f"ОШИБКА В ФОНОВОЙ ЗАДАЧЕ: {e}")
+
+
+@router.post(
+    "/", response_model=schemas.NoteOutWithComment, status_code=status.HTTP_201_CREATED
+)
 async def create_note(
     note: schemas.NoteIn,
-    background_tasks: BackgroundTasks,
     current_user: models.User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
 
-    new_note = models.Note(
-        **note.model_dump(), owner_firebase_uid=current_user.firebase_uid
-    )
+    new_note = models.Note(**note.model_dump(), owner_id=current_user.id)
 
-    ai_comment = models.AI_context(
-        owner_firebase_uid=current_user.firebase_uid,
+    user_comment = models.AIContext(
+        user_id=current_user.id,
         role="user",
         content=new_note.content,
     )
 
-    db.add_all([new_note, ai_comment])
+    db.add_all([new_note, user_comment])
     await db.commit()
-    await db.refresh(ai_comment)
+    await db.refresh(new_note)
 
-    background_tasks.add_task(generate_and_save_ai_comment, current_user.firebase_uid)
+    ai_comment = await generate_and_save_ai_comment(current_user.id, db)
 
-    return ai_comment
+    response_data = schemas.NoteOutWithComment(
+        id=new_note.id,
+        title=new_note.title,
+        content=new_note.content,
+        comment=ai_comment,
+    )
+
+    return response_data
 
 
 @router.get("/", response_model=list[schemas.NoteOut], status_code=status.HTTP_200_OK)

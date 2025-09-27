@@ -29,6 +29,12 @@ class NoteOut(NoteIn):
     model_config = ConfigDict(from_attributes=True)
 
 
+class NoteOutWithComment(NoteOut):
+    comment: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class NoteUpdate(BaseModel):
     title: Optional[str] = None
     content: Optional[str] = None

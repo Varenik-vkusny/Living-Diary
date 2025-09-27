@@ -15,6 +15,8 @@ class User(Base):
 
     notes = relationship("Note", back_populates="owner")
 
+    history = relationship("AIContext", back_populates="user")
+
 
 class Note(Base):
     __tablename__ = "notes"
@@ -24,18 +26,19 @@ class Note(Base):
     content = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.now())
 
-    owner_firebase_uid = Column(
-        String, ForeignKey("users.firebase_uid"), nullable=False, index=True
-    )
+    owner_id = Column(Integer, ForeignKey("users.id"))
 
     owner = relationship("User", back_populates="notes")
 
 
-class AI_context(Base):
+class AIContext(Base):
     __tablename__ = "ai_context"
 
     id = Column(Integer, primary_key=True)
-    owner_firebase_uid = Column(Integer, ForeignKey("users.firebase_uid"))
     role = Column(String, nullable=False)
     content = Column(String)
     created_at = Column(DateTime, default=datetime.now())
+
+    user_id = Column(Integer, ForeignKey("users.id"))
+
+    user = relationship("User", back_populates="history")
