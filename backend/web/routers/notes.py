@@ -14,8 +14,6 @@ logging.basicConfig(level=logging.INFO)
 
 router = APIRouter()
 
-CONTEXT_MAX_SYMBOLS = 100000
-
 
 async def generate_and_save_ai_comment(
     user_id: int, db: AsyncSession
