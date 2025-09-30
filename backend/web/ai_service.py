@@ -8,14 +8,14 @@ logging.basicConfig(level=logging.INFO)
 
 genai.configure(api_key=settings.gemini_api_key)
 
-model = genai.GenerativeModel("gemini-2.5-flash")
+model = genai.GenerativeModel("models/gemini-2.5-flash")
 
 
 async def summary_ai_context(full_history: str) -> str:
 
     try:
         response = await model.generate_content_async(
-            f"You are a summarization expert. Your task is to read the following conversation "
+            "You are a summarization expert. Your task is to read the following conversation "
             "between a user and their AI journal assistant and create a concise summary. "
             "Capture the key events, emotions, recurring themes, and important facts mentioned by the user. "
             "The summary will be used as a memory for the AI assistant for future conversations. "
@@ -58,11 +58,15 @@ async def get_ai_comment(history: list[dict]):
             ],
         }
 
+        logging.info("Начинаем чат с историей...")
+
         chat = model.start_chat(
             history=[system_instruction, model_confirmation] + chat_history
         )
 
         response = await chat.send_message_async(last_user_message)
+
+        logging.info("Получили ответ...")
 
         comment = response.text
 

@@ -15,16 +15,18 @@ logging.basicConfig(level=logging.INFO)
 router = APIRouter()
 
 
-async def generate_and_save_ai_comment(
-    user_id: int, db: AsyncSession
-) -> models.AIContext:
+async def generate_and_save_ai_comment(user_id: int, db: AsyncSession) -> str:
 
     try:
         logging.info("Начинается генерация")
 
         history = await get_ai_history(user_id, db)
 
+        logging.info("Взяли историю...")
+
         comment = await get_ai_comment(history)
+
+        logging.info("Сгенерировали коммент от ИИ")
 
         logging.info(comment)
 
@@ -34,7 +36,7 @@ async def generate_and_save_ai_comment(
         await db.commit()
         await db.refresh(ai_comment)
 
-        return ai_comment
+        return ai_comment.content
 
     except Exception as e:
         print(f"ОШИБКА В ФОНОВОЙ ЗАДАЧЕ: {e}")
@@ -59,18 +61,14 @@ async def create_note(
 
     db.add_all([new_note, user_comment])
     await db.commit()
-    await db.refresh(new_note)
 
     ai_comment = await generate_and_save_ai_comment(current_user.id, db)
 
-    response_data = schemas.NoteOutWithComment(
-        id=new_note.id,
-        title=new_note.title,
-        content=new_note.content,
-        comment=ai_comment,
-    )
+    await db.refresh(new_note, ["owner"])
 
-    return response_data
+    new_note.comment = ai_comment
+
+    return new_note
 
 
 @router.get("/", response_model=list[schemas.NoteOut], status_code=status.HTTP_200_OK)

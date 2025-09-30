@@ -2,7 +2,6 @@ import logging
 from fastapi import (
     APIRouter,
     Depends,
-    status,
     WebSocket,
     WebSocketDisconnect,
 )
@@ -17,7 +16,7 @@ logging.basicConfig(level=logging.INFO)
 router = APIRouter()
 
 
-@router.websocket("/ws", status_code=status.HTTP_200_OK)
+@router.websocket("/ws")
 async def send_message(
     websocket: WebSocket, user: models.User = Depends(get_current_user_ws)
 ):

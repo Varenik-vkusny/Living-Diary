@@ -3,7 +3,7 @@ import logging
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from firebase_admin import credentials
-from .routers import notes, users
+from .routers import notes, users, chat
 
 logging.basicConfig(level=logging.INFO)
 
@@ -26,6 +26,7 @@ app = FastAPI(lifespan=lifespan)
 
 app.include_router(notes.router, prefix="/notes", tags=["Notes"])
 app.include_router(users.router, prefix="/users", tags=["Users"])
+app.include_router(chat.router, prefix="/chat", tags=["Chat"])
 
 
 @app.get("/")

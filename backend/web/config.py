@@ -38,11 +38,5 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings():
     settings = Settings()
-    # --- ОТЛАДОЧНЫЙ БЛОК ---
-    print("--- DEBUG SETTINGS ---")
-    print(f"Loaded DB_HOST from settings: {settings.db_host}")
-    print(f"Loaded DB_PORT from settings: {settings.db_port}")
-    print(f"Final DATABASE_URL: {settings.database_url}")
-    print("--------------------")
-    # -------------------------
+
     return settings

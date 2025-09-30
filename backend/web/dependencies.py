@@ -56,7 +56,6 @@ async def get_current_user_ws(
 ):
 
     try:
-
         decoded_token = auth.verify_id_token(token)
     except auth.ExpiredIdTokenError:
         await websocket.close(code=1008, reason="Invalid authentication credentials")
