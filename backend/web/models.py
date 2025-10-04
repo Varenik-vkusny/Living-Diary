@@ -1,7 +1,11 @@
 from sqlalchemy import String, Integer, Column, Boolean, DateTime, ForeignKey
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.orm import relationship
 from .database import Base
+
+
+def get_utc_now():
+    return datetime.now(timezone.utc)
 
 
 class User(Base):
@@ -24,7 +28,7 @@ class Note(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String)
     content = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.now())
+    created_at = Column(DateTime(timezone=True), default=get_utc_now)
 
     owner_id = Column(Integer, ForeignKey("users.id"))
 
@@ -34,11 +38,22 @@ class Note(Base):
 class AIContext(Base):
     __tablename__ = "ai_context"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, index=True)
     role = Column(String, nullable=False)
     content = Column(String)
-    created_at = Column(DateTime, default=datetime.now())
+    created_at = Column(DateTime(timezone=True), default=get_utc_now)
 
     user_id = Column(Integer, ForeignKey("users.id"))
 
     user = relationship("User", back_populates="history")
+
+
+class Reminder(Base):
+    __tablename__ = "reminders"
+
+    id = Column(Integer, primary_key=True, index=True)
+    content = Column(String)
+    reminder_at = Column(DateTime(timezone=True), default=get_utc_now)
+    is_active = Column(Boolean, default=False)
+
+    user_id = Column(Integer, ForeignKey("users.id"))

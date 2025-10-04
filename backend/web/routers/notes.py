@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
+from datetime import datetime, timezone
 from .. import models, schemas
 from ..dependencies import get_current_user
 from ..database import get_db
@@ -18,13 +19,15 @@ router = APIRouter()
 async def generate_and_save_ai_comment(user_id: int, db: AsyncSession) -> str:
 
     try:
+
+        now_utc = datetime.now(timezone.utc)
         logging.info("Начинается генерация")
 
-        history = await get_ai_history(user_id, db)
+        history = await get_ai_history(user_id, db, now_utc)
 
         logging.info("Взяли историю...")
 
-        comment = await get_ai_comment(history)
+        comment = await get_ai_comment(history, now_utc, user_id)
 
         logging.info("Сгенерировали коммент от ИИ")
 

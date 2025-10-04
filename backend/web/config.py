@@ -16,6 +16,9 @@ class Settings(BaseSettings):
 
     gemini_api_key: str
 
+    celery_broker_url: str
+    celery_result_backend: str
+
     @computed_field
     @property
     def database_url(self) -> str:

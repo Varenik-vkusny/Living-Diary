@@ -5,6 +5,7 @@ from fastapi import (
     WebSocket,
     WebSocketDisconnect,
 )
+from datetime import datetime, timezone
 from ..database import AsyncLocalSession
 from .. import models
 from ..dependencies import get_current_user_ws
@@ -24,10 +25,10 @@ async def send_message(
     await websocket.accept()
 
     try:
-        while True:
-            message_text = await websocket.receive_text()
-
-            async with AsyncLocalSession() as db:
+        async with AsyncLocalSession() as db:
+            while True:
+                message_text = await websocket.receive_text()
+                now_utc = datetime.now(timezone.utc)
 
                 user_message = models.AIContext(
                     user_id=user.id, role="user", content=message_text
@@ -39,7 +40,7 @@ async def send_message(
                 history = await get_ai_history(user.id, db)
 
                 full_ai_comment = ""
-                async for chunk in get_ai_comment_streaming(history):
+                async for chunk in get_ai_comment_streaming(history, now_utc):
                     full_ai_comment += chunk
                     await websocket.send_text(chunk)
 
