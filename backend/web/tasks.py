@@ -2,6 +2,7 @@ import logging
 import asyncio
 from sqlalchemy import select, update
 from datetime import datetime, timezone
+from telegram import Bot
 from . import models
 from .celery_app import celery
 from .database import create_async_engine, sessionmaker, AsyncSession
@@ -9,6 +10,12 @@ from .config import get_settings
 
 logging.basicConfig(level=logging.INFO)
 
+settings = get_settings()
+
+BOT_TOKEN=settings.bot_token
+CHAT_ID=
+
+bot = Bot(token=BOT_TOKEN)
 
 @celery.task
 def check_reminders():
@@ -18,8 +25,9 @@ def check_reminders():
 
 async def process_reminders():
 
-    settings = get_settings()
-    engine = create_async_engine(settings.database_url)
+    engine = create_async_engine(
+        settings.database_url, connect_args={"statement_cache_size": 0}
+    )
     AsyncSessionLocal = sessionmaker(
         bind=engine, class_=AsyncSession, expire_on_commit=False
     )
@@ -47,7 +55,9 @@ async def process_reminders():
                     f"Отправляю напоминания для юзера {reminder.user_id} с текстом {reminder.content}"
                 )
 
-                logging.info("Все напоминания отправлены!")
+                await bot.send_message(chat_id=CHAT_ID, text=reminder.content)
+
+            logging.info("Все напоминания отправлены!")
 
             reminder_ids = [r.id for r in active_reminders]
 

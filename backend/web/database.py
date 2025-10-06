@@ -7,7 +7,9 @@ settings = get_settings()
 
 DATABASE_URL = settings.database_url
 
-async_engine = create_async_engine(DATABASE_URL)
+async_engine = create_async_engine(
+    DATABASE_URL, connect_args={"statement_cache_size": 0}
+)
 
 AsyncLocalSession = sessionmaker(
     bind=async_engine, class_=AsyncSession, expire_on_commit=False
@@ -15,7 +17,6 @@ AsyncLocalSession = sessionmaker(
 
 
 Base = declarative_base()
-from . import models
 
 
 async def get_db():

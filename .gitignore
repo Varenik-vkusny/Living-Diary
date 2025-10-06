@@ -69,3 +69,12 @@ __pycache__/
 .coverage
 htmlcov/
 .tox/
+
+# alembic
+alembic.log
+alembic.ini
+
+
+# Файлы Docker 
+postgres_data/
+redis_data/

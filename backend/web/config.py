@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     celery_broker_url: str
     celery_result_backend: str
 
+    bot_token: str
+
     @computed_field
     @property
     def database_url(self) -> str:
