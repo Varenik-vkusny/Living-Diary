@@ -1,5 +1,5 @@
 import logging
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, status, HTTPException, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -16,7 +16,9 @@ logging.basicConfig(level=logging.INFO)
 router = APIRouter()
 
 
-async def generate_and_save_ai_comment(user_id: int, db: AsyncSession) -> str:
+async def generate_and_save_ai_comment(
+    user_id: int, db: AsyncSession, background_tasks: BackgroundTasks
+) -> str:
 
     try:
 
@@ -27,7 +29,7 @@ async def generate_and_save_ai_comment(user_id: int, db: AsyncSession) -> str:
 
         logging.info("Взяли историю...")
 
-        comment = await get_ai_comment(history, now_utc, user_id)
+        comment = await get_ai_comment(history, now_utc, background_tasks, user_id)
 
         logging.info("Сгенерировали коммент от ИИ")
 
@@ -50,6 +52,7 @@ async def generate_and_save_ai_comment(user_id: int, db: AsyncSession) -> str:
 )
 async def create_note(
     note: schemas.NoteIn,
+    background_tasks: BackgroundTasks,
     current_user: models.User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -65,7 +68,9 @@ async def create_note(
     db.add_all([new_note, user_comment])
     await db.commit()
 
-    ai_comment = await generate_and_save_ai_comment(current_user.id, db)
+    ai_comment = await generate_and_save_ai_comment(
+        current_user.id, db, background_tasks
+    )
 
     await db.refresh(new_note, ["owner"])
 

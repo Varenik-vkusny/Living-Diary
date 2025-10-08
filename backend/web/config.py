@@ -10,9 +10,6 @@ class Settings(BaseSettings):
     db_host: str
     db_port: int
     db_name: str
-    db_pooler_params: str = ""
-
-    db_direct_port: int
 
     gemini_api_key: str
 
@@ -20,21 +17,14 @@ class Settings(BaseSettings):
     celery_result_backend: str
 
     bot_token: str
+    chat_id: int
 
     @computed_field
     @property
     def database_url(self) -> str:
         return (
             f"{self.db_driver}://{self.db_user}:{self.db_password}"
-            f"@{self.db_host}:{self.db_port}/{self.db_name}{self.db_pooler_params}"
-        )
-
-    @computed_field
-    @property
-    def direct_url(self) -> str:
-        return (
-            f"{self.db_driver}://{self.db_user}:{self.db_password}"
-            f"@{self.db_host}:{self.db_direct_port}/{self.db_name}"
+            f"@{self.db_host}:{self.db_port}/{self.db_name}"
         )
 
     model_config = SettingsConfigDict(env_file=".env.docker", extra="ignore")

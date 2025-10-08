@@ -12,19 +12,8 @@ services:
       - .env.docker
 
     depends_on:
-      - db
-
-  db:
-    image: postgres:17
-
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
-
-    ports:
-      - "5432:5432"
-
-    env_file:
-      - .env.db
+      redis:
+        condition: service_started
 
   redis:
     image: redis:7-alpine
@@ -45,8 +34,8 @@ services:
       - .:/app
 
     depends_on:
-      - db
-      - redis
+      redis:
+        condition: service_started
 
     env_file:
       - .env.docker
@@ -59,7 +48,8 @@ services:
       - .:/app
 
     depends_on:
-      - redis
+      redis:
+        condition: service_started
 
     env_file:
       - .env.docker
