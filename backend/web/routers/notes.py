@@ -52,12 +52,12 @@ async def generate_and_save_ai_comment(
 )
 async def create_note(
     note: schemas.NoteIn,
-    background_tasks: BackgroundTasks,
     current_user: models.User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
 
     new_note = models.Note(**note.model_dump(), owner_id=current_user.id)
+    background_tasks = BackgroundTasks()
 
     user_comment = models.AIContext(
         user_id=current_user.id,
