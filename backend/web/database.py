@@ -9,13 +9,19 @@ settings = get_settings()
 
 DATABASE_URL = settings.database_url
 
-async_engine = create_async_engine(
-    DATABASE_URL,
-    poolclass=NullPool,
-    connect_args={
-        "statement_cache_size": 0,
-        "prepared_statement_name_func": lambda: f"__asyncpg_{uuid4()}__",
+print(f"--- DATABASE_URL ИСПОЛЬЗУЕТСЯ: {DATABASE_URL} ---")
+
+connect_args = {
+    "statement_cache_size": 0,
+    "prepared_statement_cache_size": 0,
+    "server_settings": {
+        "application_name": "living-diary-app",
+        "statement_timeout": "30000",
     },
+}
+
+async_engine = create_async_engine(
+    DATABASE_URL, connect_args=connect_args, poolclass=NullPool, pool_pre_ping=True
 )
 
 AsyncLocalSession = async_sessionmaker(bind=async_engine, expire_on_commit=False)

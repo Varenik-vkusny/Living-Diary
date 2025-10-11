@@ -2,8 +2,8 @@ from celery import Celery
 from celery.schedules import crontab
 from .config import get_settings
 
-settings = get_settings()
 
+settings = get_settings()
 
 celery = Celery(
     "tasks",

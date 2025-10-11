@@ -16,9 +16,10 @@ class User(Base):
     username = Column(String)
     email = Column(String, unique=True)
     profile_completed = Column(Boolean, default=False)
+    chat_id = Column(Integer, nullable=True)
 
     notes = relationship("Note", back_populates="owner")
-
+    reminders = relationship("Reminder", back_populates="user")
     history = relationship("AIContext", back_populates="user")
 
 
@@ -57,3 +58,5 @@ class Reminder(Base):
     is_active = Column(Boolean, default=False)
 
     user_id = Column(Integer, ForeignKey("users.id"))
+
+    user = relationship("User", back_populates="reminders")

@@ -19,13 +19,12 @@ class Settings(BaseSettings):
     bot_token: str
     chat_id: int
 
+    internal_secret: str
+
     @computed_field
     @property
     def database_url(self) -> str:
-        return (
-            f"{self.db_driver}://{self.db_user}:{self.db_password}"
-            f"@{self.db_host}:{self.db_port}/{self.db_name}"
-        )
+        return f"{self.db_driver}://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
 
     model_config = SettingsConfigDict(env_file=".env.docker", extra="ignore")
 

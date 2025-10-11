@@ -115,7 +115,10 @@ async def get_ai_comment(
                 reminder_datetime = datetime.strptime(datetime_str, "%Y-%m-%d %H:%M:%S")
 
                 background_tasks.add_task(
-                    add_reminder_data_to_db, reminder_datetime, reminder_text, user_id
+                    add_reminder_data_to_db,
+                    reminder_datetime,
+                    reminder_text,
+                    user_id,
                 )
 
             except ValueError:
@@ -131,7 +134,7 @@ async def get_ai_comment(
         return "I'm having trouble thinking right now. Let's talk later."
 
 
-async def _generate_comment_process(
+async def generate_comment_process(
     last_user_message: str, chat_history: list[dict], now_utc: datetime
 ):
 

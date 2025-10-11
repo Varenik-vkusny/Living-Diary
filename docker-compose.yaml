@@ -29,7 +29,7 @@ services:
   celery_worker:
     build:
       context: .
-    command: celery -A backend.web.celery_app.celery worker --loglevel=info
+    command: celery -A backend.web.celery_app.celery worker -l info --pool=custom
     volumes:
       - .:/app
 
@@ -39,6 +39,8 @@ services:
 
     env_file:
       - .env.docker
+    environment:
+      - CELERY_CUSTOM_WORKER_POOL=celery_aio_pool.pool:AsyncIOPool
 
   celery_beat:
     build:
