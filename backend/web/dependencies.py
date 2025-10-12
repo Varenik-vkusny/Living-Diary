@@ -12,7 +12,7 @@ from fastapi import (
 )
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from .database import AsyncLocalSession, get_db
+from .database import get_db
 from .config import get_settings
 from . import models
 
@@ -23,7 +23,7 @@ logging.basicConfig(level=logging.INFO)
 
 bearer_scheme = HTTPBearer()
 
-INTERNAL_SECRET = settings.internal_secret
+INTERNAL_SECRET_KEY = settings.internal_secret_key
 
 
 async def get_current_user(
@@ -100,9 +100,9 @@ async def get_service_user(
     request: Request, db: AsyncSession = Depends(get_db)
 ) -> models.User | None:
 
-    internal_secret = request.headers.get("X-Internal-Secret")
+    internal_secret = request.header    s.get("X-Internal-Secret")
 
-    if internal_secret == INTERNAL_SECRET:
+    if internal_secret == INTERNAL_SECRET_KEY:
         if request.method == "GET":
             user_id = request.query_params.get("userId")
         else:
@@ -112,7 +112,10 @@ async def get_service_user(
             except Exception:
                 user_id = None
         if not user_id:
-            return None
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Не нашел uid в теле запроса!",
+            )
 
         user_res = await db.execute(
             select(models.User).where(models.User.firebase_uid == user_id)
@@ -125,19 +128,3 @@ async def get_service_user(
             )
         return user
     return None
-
-
-async def get_flexible_user(
-    token_user: models.User | None = Depends(get_current_user),
-    service_user: models.User | None = Depends(get_service_user),
-    ws_user: models.User | None = Depends(get_current_user_ws),
-) -> models.User:
-
-    user = token_user or service_user or ws_user
-
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Вы не авторизованы!"
-        )
-
-    return user

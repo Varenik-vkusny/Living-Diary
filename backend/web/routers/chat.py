@@ -4,7 +4,7 @@ import asyncio
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from datetime import datetime, timezone
 from .. import models
-from ..dependencies import get_flexible_user
+from ..dependencies import get_current_user_ws
 from ..ai_service import generate_comment_process, add_reminder_data_to_db
 from ..services import get_ai_history
 from ..database import AsyncLocalSession
@@ -17,7 +17,7 @@ router = APIRouter()
 @router.websocket("/ws")
 async def send_message(
     websocket: WebSocket,
-    user: models.User = Depends(get_flexible_user),
+    user: models.User = Depends(get_current_user_ws),
 ):
 
     await websocket.accept()

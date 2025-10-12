@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     bot_token: str
     chat_id: int
 
-    internal_secret: str
+    internal_secret_key: str
 
     @computed_field
     @property
