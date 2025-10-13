@@ -21,6 +21,10 @@ class NoteIn(BaseModel):
     content: str
 
 
+class NoteInBot(NoteIn):
+    userId: str
+
+
 class NoteOut(NoteIn):
     id: int
     created_at: datetime

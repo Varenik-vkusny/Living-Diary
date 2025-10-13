@@ -96,35 +96,50 @@ async def get_current_user_ws(
     return user_db
 
 
+async def verify_internal_secret_key(request: Request):
+
+    internal_secret = request.headers.get("X-Internal-Secret")
+
+    logging.info(f"Internal-secret: {internal_secret}")
+
+    if internal_secret != INTERNAL_SECRET_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid internal secret key",
+        )
+
+
 async def get_service_user(
     request: Request, db: AsyncSession = Depends(get_db)
 ) -> models.User | None:
 
-    internal_secret = request.header    s.get("X-Internal-Secret")
+    internal_secret = request.headers.get("X-Internal-Secret")
 
-    if internal_secret == INTERNAL_SECRET_KEY:
-        if request.method == "GET":
-            user_id = request.query_params.get("userId")
-        else:
-            try:
-                body = await request.json()
-                user_id = body.get("userId")
-            except Exception:
-                user_id = None
-        if not user_id:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Не нашел uid в теле запроса!",
-            )
+    logging.info(f"Internal-secret: {internal_secret}")
 
-        user_res = await db.execute(
-            select(models.User).where(models.User.firebase_uid == user_id)
+    if internal_secret != INTERNAL_SECRET_KEY:
+        return None
+
+    if request.method != "GET":
+        return None
+
+    user_id = request.query_params.get("userId")
+
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Параметр 'userId' обязателен для сервисных GET-запросов.",
         )
-        user = user_res.scalar_one_or_none()
 
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Вы не авторизованы!"
-            )
-        return user
-    return None
+    user_res = await db.execute(
+        select(models.User).where(models.User.firebase_uid == user_id)
+    )
+    user = user_res.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Пользователь с userId '{user_id}' не найден.",
+        )
+
+    return user

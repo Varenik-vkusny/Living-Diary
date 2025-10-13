@@ -36,6 +36,8 @@ services:
     depends_on:
       redis:
         condition: service_started
+      celery_beat:
+        condition: service_started
 
     env_file:
       - .env.docker

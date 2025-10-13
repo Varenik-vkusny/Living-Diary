@@ -2,14 +2,11 @@ from sqlalchemy.ext.asyncio.engine import create_async_engine
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.pool import NullPool
 from sqlalchemy.orm import declarative_base
-from uuid import uuid4
 from .config import get_settings
 
 settings = get_settings()
 
 DATABASE_URL = settings.database_url
-
-print(f"--- DATABASE_URL ИСПОЛЬЗУЕТСЯ: {DATABASE_URL} ---")
 
 connect_args = {
     "statement_cache_size": 0,

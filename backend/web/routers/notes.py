@@ -5,7 +5,11 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime, timezone
 from .. import models, schemas
-from ..dependencies import get_current_user, get_service_user
+from ..dependencies import (
+    get_current_user,
+    verify_internal_secret_key,
+    get_service_user,
+)
 from ..database import get_db
 from ..ai_service import get_ai_comment
 from ..services import get_ai_history
@@ -17,35 +21,30 @@ router = APIRouter()
 
 
 async def generate_and_save_ai_comment(
-    user_id: int, background_tasks: BackgroundTasks, db: AsyncSession
+    user_id: int, db: AsyncSession, background_tasks: BackgroundTasks
 ) -> str:
 
-    try:
+    now_utc = datetime.now(timezone.utc)
+    logging.info("Начинается генерация")
 
-        now_utc = datetime.now(timezone.utc)
-        logging.info("Начинается генерация")
+    history = await get_ai_history(user_id, db, now_utc)
 
-        history = await get_ai_history(user_id, db, now_utc)
+    logging.info("Взяли историю...")
 
-        logging.info("Взяли историю...")
+    comment = await get_ai_comment(history, now_utc, background_tasks, user_id)
 
-        comment = await get_ai_comment(history, now_utc, background_tasks, user_id)
+    logging.info("Сгенерировали коммент от ИИ")
 
-        logging.info("Сгенерировали коммент от ИИ")
+    logging.info(comment)
 
-        logging.info(comment)
+    ai_comment = models.AIContext(user_id=user_id, content=comment, role="model")
 
-        ai_comment = models.AIContext(user_id=user_id, content=comment, role="model")
+    db.add(ai_comment)
+    await db.commit()
+    await db.refresh(ai_comment)
+    logging.info("Бд сработала")
 
-        db.add(ai_comment)
-        await db.commit()
-        await db.refresh(ai_comment)
-        logging.info("Бд сработала")
-
-        return ai_comment.content
-
-    except Exception as e:
-        print(f"ОШИБКА В ФОНОВОЙ ЗАДАЧЕ: {e}")
+    return ai_comment.content
 
 
 @router.post(
@@ -87,16 +86,23 @@ async def create_note(
     "/bot/", response_model=schemas.NoteOut, status_code=status.HTTP_201_CREATED
 )
 async def create_note_bot(
-    note: schemas.NoteIn,
-    current_user: models.User = Depends(get_service_user),
+    note: schemas.NoteInBot,
+    _=Depends(verify_internal_secret_key),
     db: AsyncSession = Depends(get_db),
 ):
-    logging.info(f"Айди юзера: {current_user.id}")
 
-    new_note = models.Note(**note.model_dump(), owner_id=current_user.id)
+    logging.info(f"Firebase Айди юзера: {note.userId}")
+
+    user_res = await db.execute(
+        select(models.User).where(models.User.firebase_uid == note.userId)
+    )
+
+    user_db = user_res.scalar_one_or_none()
+
+    new_note = models.Note(title=note.title, content=note.content, owner_id=user_db.id)
 
     user_comment = models.AIContext(
-        user_id=current_user.id,
+        user_id=user_db.id,
         role="user",
         content=new_note.content,
     )
@@ -144,6 +150,13 @@ async def get_notes_bot(
     current_user: models.User = Depends(get_service_user),
     db: AsyncSession = Depends(get_db),
 ):
+
+    if current_user is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Не удалось найти internal_secret_key",
+        )
+
     notes_res = await db.execute(
         select(models.Note)
         .options(selectinload(models.Note.owner))

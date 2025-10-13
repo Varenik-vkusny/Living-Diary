@@ -1,6 +1,7 @@
 import firebase_admin
 import logging
 from fastapi import FastAPI
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from contextlib import asynccontextmanager
 from firebase_admin import credentials
 from .routers import notes, users, chat
@@ -23,6 +24,10 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+app.add_middleware(
+    TrustedHostMiddleware, allowed_hosts=["*.ngrok-free.app", "localhost", "127.0.0.1"]
+)
 
 app.include_router(notes.router, prefix="/notes", tags=["Notes"])
 app.include_router(users.router, prefix="/users", tags=["Users"])
