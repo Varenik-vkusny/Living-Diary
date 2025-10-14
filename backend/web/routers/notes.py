@@ -240,3 +240,32 @@ async def delete_note(
     await db.commit()
 
     return
+
+
+@router.delete("/bot/{note_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_note_bot(
+    note_id: int,
+    current_user: models.User = Depends(get_service_user),
+    db: AsyncSession = Depends(get_db),
+):
+
+    note_res = await db.execute(select(models.Note).where(models.Note.id == note_id))
+
+    note_db = note_res.scalar_one_or_none()
+
+    if not note_db:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Записи с таким id не найдено!",
+        )
+
+    if note_db.owner_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Эта запись вам не принадлежит! Вы не можете ее удалить!",
+        )
+
+    await db.delete(note_db)
+    await db.commit()
+
+    return

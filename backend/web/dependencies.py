@@ -110,7 +110,7 @@ async def verify_internal_secret_key(request: Request):
 
 
 async def get_service_user(
-    request: Request, db: AsyncSession = Depends(get_db)
+    request: Request, note_id: int = None, db: AsyncSession = Depends(get_db)
 ) -> models.User | None:
 
     internal_secret = request.headers.get("X-Internal-Secret")
@@ -120,7 +120,7 @@ async def get_service_user(
     if internal_secret != INTERNAL_SECRET_KEY:
         return None
 
-    if request.method != "GET":
+    if request.method != "GET" and request.method != "DELETE":
         return None
 
     user_id = request.query_params.get("userId")

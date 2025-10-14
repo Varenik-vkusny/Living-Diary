@@ -1,6 +1,7 @@
 import logging
 import re
 import google.generativeai as genai
+from google.generativeai.types import HarmCategory, HarmBlockThreshold
 from fastapi.background import BackgroundTasks
 from datetime import datetime
 from . import models
@@ -13,12 +14,14 @@ logging.basicConfig(level=logging.INFO)
 
 genai.configure(api_key=settings.gemini_api_key)
 
-model = genai.GenerativeModel("models/gemini-2.5-flash")
+model = genai.GenerativeModel("models/gemini-2.5-pro")
 
 
 async def add_reminder_data_to_db(
     reminder_datetime: datetime, reminder_text: str, user_id: int
 ):
+
+    logging.info(f"Сохраняю напоминание для юзера {user_id} с текстом {reminder_text}")
 
     async with AsyncLocalSession() as session:
         new_reminder = models.Reminder(
@@ -30,6 +33,8 @@ async def add_reminder_data_to_db(
 
         session.add(new_reminder)
         await session.commit()
+
+    logging.info("Напоминаний сохранено")
 
 
 async def summary_ai_context(full_history: str, now_utc: datetime) -> str:
@@ -85,7 +90,7 @@ async def get_ai_comment(
         model_confirmation = {
             "role": "model",
             "parts": [
-                "Understood. I am ready to be a caring friend and journal assistant."
+                "Understood. I am ready to be a caring friend and journal assistant. I will insert a block of the format [REMINDER: YYYY-MM-DD HH:MM:SS | Reminder Text] every time I think the user has something planned to do."
             ],
         }
 
@@ -95,11 +100,19 @@ async def get_ai_comment(
             history=[system_instruction, model_confirmation] + chat_history
         )
 
-        response = await chat.send_message_async(last_user_message)
-
-        logging.info("Получили ответ...")
+        response = await chat.send_message_async(
+            last_user_message,
+            safety_settings={
+                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
+            },
+        )
 
         comment = response.text
+
+        logging.info("Получили ответ...")
 
         reg = r"\[REMINDER: (.*?) \| (.*?)\]"
 
@@ -154,7 +167,7 @@ async def generate_comment_process(
     model_confirmation = {
         "role": "model",
         "parts": [
-            "Understood. I am ready to be a caring friend and journal assistant."
+            "Understood. I am ready to be a caring friend and journal assistant. I will insert a block of the format [REMINDER: YYYY-MM-DD HH:MM:SS | Reminder Text] every time I think the user has something planned to do."
         ],
     }
 
@@ -163,9 +176,30 @@ async def generate_comment_process(
     )
 
     try:
-        response = await chat.send_message_async(last_user_message, stream=True)
+        response = await chat.send_message_async(
+            last_user_message,
+            stream=True,
+            safety_settings={
+                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
+            },
+        )
         async for chunk in response:
-            yield chunk.text
+            if chunk.prompt_feedback and chunk.prompt_feedback.block_reason:
+                logging.error(
+                    f"Запрос был заблокирован по причине: {chunk.prompt_feedback.block_reason}"
+                )
+                yield "My response was blocked due to safety filters."
+                break
+
+            if chunk.parts:
+                yield chunk.text
+            else:
+                logging.warning(
+                    "Получен пустой чанк от Gemini, возможно сработали фильтры."
+                )
 
     except Exception as e:
         logging.error(f"Ошибка в стриминге Gemini: {e}", exc_info=True)

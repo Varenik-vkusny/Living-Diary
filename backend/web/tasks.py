@@ -20,12 +20,7 @@ bot = Bot(token=BOT_TOKEN)
 
 
 @celery.task
-def check_reminders():
-
-    asyncio.run(process_reminders())
-
-
-async def process_reminders():
+async def check_reminders():
 
     logging.info("Celery проверяет активные напоминания...")
 
@@ -35,7 +30,7 @@ async def process_reminders():
             active_reminders_res = await session.execute(
                 select(models.Reminder)
                 .where(
-                    models.Reminder.reminder_at >= utc_now,
+                    models.Reminder.reminder_at == utc_now,
                     models.Reminder.is_active == True,
                 )
                 .options(selectinload(models.Reminder.user))
@@ -49,12 +44,15 @@ async def process_reminders():
 
             for reminder in active_reminders:
                 user = reminder.user
-                # if user and user.chat_id:
-                logging.info(
-                    f"Отправляю напоминания для юзера {reminder.user_id} с текстом {reminder.content}"
-                )
+                if user:
+                    # if user and user.chat_id:
+                    logging.info(
+                        f"Отправляю напоминания для юзера {reminder.user_id} с текстом {reminder.content}"
+                    )
 
-                await bot.send_message(chat_id=5330052033, text=reminder.content)
+                    await bot.send_message(chat_id=user.chat_id, text=reminder.content)
+                else:
+                    logging.info("Не удалось найти юзера для отправки уведомления!")
 
             logging.info("Все напоминания отправлены!")
 

@@ -42,3 +42,8 @@ class NoteOutWithComment(NoteOut):
 class NoteUpdate(BaseModel):
     title: Optional[str] = None
     content: Optional[str] = None
+
+
+class UserInChatId(BaseModel):
+    user_uid: str
+    chat_id: int

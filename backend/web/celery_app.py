@@ -16,7 +16,7 @@ celery = Celery(
 celery.conf.beat_schedule = {
     "check-reminders-every-minute": {
         "task": "backend.web.tasks.check_reminders",
-        "schedule": crontab(minute="*/5"),
+        "schedule": crontab(minute="*/2"),
     }
 }
 
